@@ -32,25 +32,82 @@ var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
 
 var mvMatrixStack = [];
+//Logging the key events
+var currentlyPressedKeys = {};
+
+window.addEventListener("keydown", function (event) {
+  if (event.defaultPrevented) {
+    return; // Should do nothing if the default action has been cancelled
+  }
+
+  var handled = false;
+  if (event.key !== undefined) {
+    // Handle the event with KeyboardEvent.key and set handled true.
+    var key = event.key;
+    handled=true;
+    console.log("Key " + key );
+  } else if (event.keyIdentifier !== undefined) {
+    // Handle the event with KeyboardEvent.keyIdentifier and set handled true.
+    var key = event.keyIdentifier;
+    console.log("Pressed key /t key Identifier: " + key );
+    currentlyPressedKeys[key] = true;
+    console.log("keyvalue is " + currentlyPressedKeys[key]);
+    handled=true;
+  } else if (event.keyCode !== undefined) {
+    // Handle the event with KeyboardEvent.keyCode and set handled true.
+    var key = event.keyCode;
+    console.log("KeyPressed " + key );
+    handled=true;
+  }
+
+  if (handled) {
+    // Suppress "double action" if event handled
+    event.preventDefault();
+  }
+}, true);
+
+window.addEventListener("keyup", function (event) {
+  if(event.defaultPrevented){
+    return;
+  }
+  var handled=false;
+  if(event.keyIdentifier!== undefined){
+    var key = event.keyIdentifier;
+    console.log("Released key /t key identifier: " + key);
+    currentlyPressedKeys[key]=false;
+    handled = true;
+  }
+  if (handled) {
+    // Suppress "double action" if event handled
+    event.preventDefault();
+  }
+},true);
+
+//window.addEventListener("keydown", keyEvent (event));
+
+function keyEvent (event) {
+  var key = event.keyCode;
+  console.log("KeyPressed" + key );
+}
 
 
 //-------------------------------------------------------------------------
 function setupTerrainBuffers() {
-    
+
     var vTerrain=[];
     var fTerrain=[];
     var nTerrain=[];
     var eTerrain=[];
     var gridN=20;
-    
+
     var numT = terrainFromIteration(gridN, -1,1,-1,1, vTerrain, fTerrain, nTerrain);
-    console.log("Generated ", numT, " triangles"); 
+    console.log("Generated ", numT, " triangles");
     tVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, tVertexPositionBuffer);      
+    gl.bindBuffer(gl.ARRAY_BUFFER, tVertexPositionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vTerrain), gl.STATIC_DRAW);
     tVertexPositionBuffer.itemSize = 3;
     tVertexPositionBuffer.numItems = (gridN+1)*(gridN+1);
-    
+
     // Specify normals to be able to do lighting calculations
     tVertexNormalBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, tVertexNormalBuffer);
@@ -58,61 +115,61 @@ function setupTerrainBuffers() {
                   gl.STATIC_DRAW);
     tVertexNormalBuffer.itemSize = 3;
     tVertexNormalBuffer.numItems = (gridN+1)*(gridN+1);
-    
-    // Specify faces of the terrain 
+
+    // Specify faces of the terrain
     tIndexTriBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tIndexTriBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(fTerrain),
                   gl.STATIC_DRAW);
     tIndexTriBuffer.itemSize = 1;
     tIndexTriBuffer.numItems = numT*3;
-    
+
     //Setup Edges
-     generateLinesFromIndexedTriangles(fTerrain,eTerrain);  
+     generateLinesFromIndexedTriangles(fTerrain,eTerrain);
      tIndexEdgeBuffer = gl.createBuffer();
      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tIndexEdgeBuffer);
      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(eTerrain),
                   gl.STATIC_DRAW);
      tIndexEdgeBuffer.itemSize = 1;
      tIndexEdgeBuffer.numItems = eTerrain.length;
-    
-     
+
+
 }
 
 //-------------------------------------------------------------------------
 function drawTerrain(){
  gl.polygonOffset(0,0);
  gl.bindBuffer(gl.ARRAY_BUFFER, tVertexPositionBuffer);
- gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, tVertexPositionBuffer.itemSize, 
+ gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, tVertexPositionBuffer.itemSize,
                          gl.FLOAT, false, 0, 0);
 
  // Bind normal buffer
  gl.bindBuffer(gl.ARRAY_BUFFER, tVertexNormalBuffer);
- gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, 
+ gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute,
                            tVertexNormalBuffer.itemSize,
-                           gl.FLOAT, false, 0, 0);   
-    
- //Draw 
+                           gl.FLOAT, false, 0, 0);
+
+ //Draw
  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tIndexTriBuffer);
- gl.drawElements(gl.TRIANGLES, tIndexTriBuffer.numItems, gl.UNSIGNED_SHORT,0);      
+ gl.drawElements(gl.TRIANGLES, tIndexTriBuffer.numItems, gl.UNSIGNED_SHORT,0);
 }
 
 //-------------------------------------------------------------------------
 function drawTerrainEdges(){
  gl.polygonOffset(1,1);
  gl.bindBuffer(gl.ARRAY_BUFFER, tVertexPositionBuffer);
- gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, tVertexPositionBuffer.itemSize, 
+ gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, tVertexPositionBuffer.itemSize,
                          gl.FLOAT, false, 0, 0);
 
  // Bind normal buffer
  gl.bindBuffer(gl.ARRAY_BUFFER, tVertexNormalBuffer);
- gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, 
+ gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute,
                            tVertexNormalBuffer.itemSize,
-                           gl.FLOAT, false, 0, 0);   
-    
- //Draw 
+                           gl.FLOAT, false, 0, 0);
+
+ //Draw
  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tIndexEdgeBuffer);
- gl.drawElements(gl.LINES, tIndexEdgeBuffer.numItems, gl.UNSIGNED_SHORT,0);      
+ gl.drawElements(gl.LINES, tIndexEdgeBuffer.numItems, gl.UNSIGNED_SHORT,0);
 }
 
 //-------------------------------------------------------------------------
@@ -122,7 +179,7 @@ function uploadModelViewMatrixToShader() {
 
 //-------------------------------------------------------------------------
 function uploadProjectionMatrixToShader() {
-  gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, 
+  gl.uniformMatrix4fv(shaderProgram.pMatrixUniform,
                       false, pMatrix);
 }
 
@@ -185,13 +242,13 @@ function createGLContext(canvas) {
 //----------------------------------------------------------------------------------
 function loadShaderFromDOM(id) {
   var shaderScript = document.getElementById(id);
-  
+
   // If we don't find an element with the specified id
-  // we do an early exit 
+  // we do an early exit
   if (!shaderScript) {
     return null;
   }
-  
+
   // Loop through the children for the found DOM element and
   // build up the shader source code as a string
   var shaderSource = "";
@@ -202,7 +259,7 @@ function loadShaderFromDOM(id) {
     }
     currentChild = currentChild.nextSibling;
   }
- 
+
   var shader;
   if (shaderScript.type == "x-shader/x-fragment") {
     shader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -211,14 +268,14 @@ function loadShaderFromDOM(id) {
   } else {
     return null;
   }
- 
+
   gl.shaderSource(shader, shaderSource);
   gl.compileShader(shader);
- 
+
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     alert(gl.getShaderInfoLog(shader));
     return null;
-  } 
+  }
   return shader;
 }
 
@@ -226,7 +283,7 @@ function loadShaderFromDOM(id) {
 function setupShaders() {
   vertexShader = loadShaderFromDOM("shader-vs");
   fragmentShader = loadShaderFromDOM("shader-fs");
-  
+
   shaderProgram = gl.createProgram();
   gl.attachShader(shaderProgram, vertexShader);
   gl.attachShader(shaderProgram, fragmentShader);
@@ -247,8 +304,8 @@ function setupShaders() {
   shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
   shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
   shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
-  shaderProgram.uniformLightPositionLoc = gl.getUniformLocation(shaderProgram, "uLightPosition");    
-  shaderProgram.uniformAmbientLightColorLoc = gl.getUniformLocation(shaderProgram, "uAmbientLightColor");  
+  shaderProgram.uniformLightPositionLoc = gl.getUniformLocation(shaderProgram, "uLightPosition");
+  shaderProgram.uniformAmbientLightColorLoc = gl.getUniformLocation(shaderProgram, "uAmbientLightColor");
   shaderProgram.uniformDiffuseLightColorLoc = gl.getUniformLocation(shaderProgram, "uDiffuseLightColor");
   shaderProgram.uniformSpecularLightColorLoc = gl.getUniformLocation(shaderProgram, "uSpecularLightColor");
 }
@@ -268,34 +325,34 @@ function setupBuffers() {
 }
 
 //----------------------------------------------------------------------------------
-function draw() { 
+function draw() {
     var transformVec = vec3.create();
-  
+
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // We'll use perspective 
+    // We'll use perspective
     mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
 
-    // We want to look down -z, so create a lookat point in that direction    
+    // We want to look down -z, so create a lookat point in that direction
     vec3.add(viewPt, eyePt, viewDir);
     // Then generate the lookat matrix and initialize the MV matrix to that view
-    mat4.lookAt(mvMatrix,eyePt,viewPt,up);    
- 
+    mat4.lookAt(mvMatrix,eyePt,viewPt,up);
+
     //Draw Terrain
     mvPushMatrix();
     vec3.set(transformVec,0.0,-0.25,-3.0);
     mat4.translate(mvMatrix, mvMatrix,transformVec);
     mat4.rotateX(mvMatrix, mvMatrix, degToRad(-75));
-    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(25));     
+    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(25));
     setMatrixUniforms();
-    
+
     if ((document.getElementById("polygon").checked) || (document.getElementById("wirepoly").checked))
     {
       uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
       drawTerrain();
     }
-    
+
     if(document.getElementById("wirepoly").checked){
       uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
       drawTerrainEdges();
@@ -306,12 +363,12 @@ function draw() {
       drawTerrainEdges();
     }
     mvPopMatrix();
-  
+
 }
 
 //----------------------------------------------------------------------------------
 function animate() {
-   
+
 }
 
 //----------------------------------------------------------------------------------
@@ -327,8 +384,50 @@ function startup() {
 
 //----------------------------------------------------------------------------------
 function tick() {
+    handleKeys();
     requestAnimFrame(tick);
     draw();
     animate();
 }
+//----------------------------------------------------------------------------------
+var speed = 0.0;
+function handleKeys() {
+    //Logging the key events
 
+    function handleKeyDown(event) {
+        currentlyPressedKeys[event.keyCode] = true;
+    }
+    function handleKeyUp(event) {
+        currentlyPressedKeys[event.keyCode] = false;
+    }
+    //-------------------------
+    if (currentlyPressedKeys["Left"] || currentlyPressedKeys["U+0041"]){
+        // left cursor or A
+        eyePt[0]-=0.2;
+        console.log("Move Left");
+    } else if (currentlyPressedKeys["Right"] || currentlyPressedKeys["U+0044"]) {
+        // right cursor or D
+        eyePt[0]+=0.2;
+        console.log("Move Right");
+    } else if (currentlyPressedKeys["Up"] || currentlyPressedKeys["U+0057"]) {
+        // up cursor or W
+        eyePt[1]+=0.2;
+        console.log("Move Forward");
+    } else if (currentlyPressedKeys["Down"] || currentlyPressedKeys["U+0053"]) {
+        // down cursor or S
+        eyePt[1]-=0.2;
+        console.log("Move Back");
+    } else if (currentlyPressedKeys["U+005A"]) {
+        // z key
+        speed += 0.01;
+        console.log("Move Move faster");
+    } else if (currentlyPressedKeys["U+0058"]) {
+        // x key
+        speed -= 0.01;
+        console.log("Move slower");
+    }
+    eyePt[2]+=speed;
+
+    // We should add more controls for controloing the remaingin axis
+
+}
