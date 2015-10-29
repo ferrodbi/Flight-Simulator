@@ -39,7 +39,6 @@ window.addEventListener("keydown", function (event) {
   if (event.defaultPrevented) {
     return; // Should do nothing if the default action has been cancelled
   }
-
   var handled = false;
   if (event.key !== undefined) {
     // Handle the event with KeyboardEvent.key and set handled true.
@@ -59,7 +58,6 @@ window.addEventListener("keydown", function (event) {
     console.log("KeyPressed " + key );
     handled=true;
   }
-
   if (handled) {
     // Suppress "double action" if event handled
     event.preventDefault();
@@ -98,7 +96,7 @@ function setupTerrainBuffers() {
     var fTerrain=[];
     var nTerrain=[];
     var eTerrain=[];
-    var gridN=20;
+    var gridN=100;
 
     var numT = terrainFromIteration(gridN, -1,1,-1,1, vTerrain, fTerrain, nTerrain);
     console.log("Generated ", numT, " triangles");
@@ -403,30 +401,53 @@ function handleKeys() {
     //-------------------------
     if (currentlyPressedKeys["Left"] || currentlyPressedKeys["U+0041"]){
         // left cursor or A
-        eyePt[0]-=0.2;
+        //eyePt[0]-=0.02;
+        //viewDir[0]-=0.02;
+        //vec3.add(viewPt, eyePt, viewDir);
+        console.log(viewDir);
+        vec3.add(viewDir,viewDir,vec3.fromValues(-1,0,0));
+        //vec3.rotateX(eyePt,eyePt,degToRad(1));
+        console.log(viewDir);
+       // vec3.rotateY(eyePt,eyePt,degToRad(0.001));
+
+        
         console.log("Move Left");
-    } else if (currentlyPressedKeys["Right"] || currentlyPressedKeys["U+0044"]) {
+        
+    } if (currentlyPressedKeys["Right"] || currentlyPressedKeys["U+0044"]) {
         // right cursor or D
-        eyePt[0]+=0.2;
+        eyePt[0]+=0.02;
+        viewDir[0]+=0.02;
         console.log("Move Right");
-    } else if (currentlyPressedKeys["Up"] || currentlyPressedKeys["U+0057"]) {
+    } if (currentlyPressedKeys["Up"] || currentlyPressedKeys["U+0057"]) {
         // up cursor or W
-        eyePt[1]+=0.2;
+        eyePt[1]+=0.02;
+        viewDir[1]+=0.02;
         console.log("Move Forward");
-    } else if (currentlyPressedKeys["Down"] || currentlyPressedKeys["U+0053"]) {
+    } if (currentlyPressedKeys["Down"] || currentlyPressedKeys["U+0053"]) {
         // down cursor or S
-        eyePt[1]-=0.2;
+        eyePt[1]-=0.02;
+        viewDir[1]-=0.02;
         console.log("Move Back");
-    } else if (currentlyPressedKeys["U+005A"]) {
+    } if (currentlyPressedKeys["U+0043"]) {
+        // c key
+        speed = 0;
+        console.log("Stop!");
+    }
+        // Speed controls
+     if (currentlyPressedKeys["U+005A"]) {
         // z key
         speed += 0.01;
+        if (speed>1) speed = 1;
         console.log("Move Move faster");
-    } else if (currentlyPressedKeys["U+0058"]) {
+    } if (currentlyPressedKeys["U+0058"]) {
         // x key
         speed -= 0.01;
+        if (speed<-1) speed = -1;
         console.log("Move slower");
     }
     eyePt[2]+=speed;
+    //mat4.translate(mvMatrix,[0,0,1,0]);
+    
 
     // We should add more controls for controloing the remaingin axis
 

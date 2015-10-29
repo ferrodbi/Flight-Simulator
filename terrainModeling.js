@@ -1,3 +1,11 @@
+//------------------------------------------------------------------------
+function terrainDiamond(n, minX, maxX, minY, maxY, vA, fA, nA ){
+    var deltaX=(maxX-minX)/n;
+    var deltaY=(maxY-minY)/n;
+    var cornersHeight = 0.25;
+}
+
+
 //-------------------------------------------------------------------------
 function terrainFromIteration(n, minX,maxX,minY,maxY, vertexArray, faceArray,normalArray)
 {
@@ -8,7 +16,9 @@ function terrainFromIteration(n, minX,maxX,minY,maxY, vertexArray, faceArray,nor
        {
            vertexArray.push(minX+deltaX*j);
            vertexArray.push(minY+deltaY*i);
+           //if(i%2==0)
            vertexArray.push(0);
+           //else vertexArray.push(1);
            
            normalArray.push(0);
            normalArray.push(0);
